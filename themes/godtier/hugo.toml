@@ -20,6 +20,10 @@ min_version = "0.120.0"
     url = "/prompts/"
     weight = 20
   [[menu.main]]
+    name = "Builder"
+    url = "/builder/"
+    weight = 25
+  [[menu.main]]
     name = "Categories"
     url = "/categories/"
     weight = 30

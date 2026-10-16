@@ -1,10 +1,10 @@
 {{/* Taxonomy (category/tag) list page */}}
 {{ define "title" }}{{ .Title }} — {{ site.Title }}{{ end }}
 {{ define "main" }}
-<div class="hero" style="padding-block: 2.5rem 1rem;">
+<div class="gt-hero" style="padding-block: 2.5rem 1rem;">
   <div class="container">
     <h1>{{ .Title }}</h1>
-    <p class="muted">{{ len .Data.Pages }} prompts in this category.</p>
+    <p class="lead">{{ len .Data.Pages }} prompts in this category.</p>
   </div>
 </div>
 
@@ -19,7 +19,7 @@
       <div class="card-meta">
         <span class="badge">{{ .Date.Format "Jan 2, 2006" }}</span>
       </div>
-      <pre class="prompt-preview">{{ .Plain | truncate 200 "" }}</pre>
+      <pre class="prompt-preview">{{ .Plain | truncate 160 "" }}</pre>
       <a href="{{ .RelPermalink }}" class="read-more">Use this prompt →</a>
     </article>
     {{ end }}

@@ -3,25 +3,21 @@
 {{ define "main" }}
 {{ if eq .Type "prompts" }}
 
-{{/* Prompt detail page */}}
 {{ $p := . }}
 <div class="gt-prompt-detail">
   <article class="prompt-meta-bar">
     <div>
       {{ with $p.Params.categories }}
-      {{ range . }}<a href="{{ "categories/" | relLangURL }}{{ . | urlize | lower }}" class="badge">{{ . }}</a>{{ end }}
+      {{ range . }}<a href="{{ "categories/" | relLangURL }}{{ . | urlize | lower }}" class="badge">{{ . | title }}</a>{{ end }}
       {{ end }}
       {{ range $p.Params.tags }}
       <a href="{{ "tags/" | relLangURL }}{{ . | urlize | lower }}" class="badge">{{ . }}</a>
       {{ end }}
       <span class="badge">{{ $p.Date.Format "Jan 2, 2006" }}</span>
-      <span class="badge model-badge {{ $p.Params.model | default "multi" }}">{{ $p.Params.model | default "Multi-Model" }}</span>
+      <span class="badge model-badge">{{ $p.Params.model | default "Multi-Model" }}</span>
     </div>
-
     {{ if $p.Params.best_score }}
-    <span class="prompt-score">
-      {{ $p.Params.best_score }}/10 <span class="star">★</span>
-    </span>
+    <span class="prompt-score">{{ $p.Params.best_score }}/10 <span class="star">★</span></span>
     {{ end }}
   </article>
 
@@ -49,8 +45,7 @@
   {{ end }}
 
   <footer class="gt-footer" style="margin-top: 2rem;">
-    <p><a href="/prompts/">← Back to all prompts</a> · 
-       Published {{ $p.Date.Format "January 2, 2006" }}.</p>
+    <p><a href="/prompts/">← Back to all prompts</a> · Published {{ $p.Date.Format "January 2, 2006" }}.</p>
   </footer>
 </div>
 
@@ -61,16 +56,19 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
     const el = document.getElementById(target);
     if (!el) return;
     navigator.clipboard.writeText(el.textContent).then(() => {
-      btn.textContent = '✓';
-      setTimeout(() => btn.textContent = '📋', 2000);
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('copied'); }, 2000);
     });
   });
 });
 </script>
 
+{{ else if eq .Type "builder" }}
+{{ .Content }}
+
 {{ else }}
-{{/* Static page (about, etc.) */}}
-<div class="container" style="margin-block: 3rem;">
+<div class="container gt-about" style="margin-block: 3rem;">
   <h1>{{ .Title }}</h1>
   {{ .Content }}
 </div>

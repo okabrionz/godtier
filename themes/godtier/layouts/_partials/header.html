@@ -4,11 +4,13 @@
     <div class="logo">
       <span class="spark">⚡</span> GodTier
     </div>
+    {{ $url := $.RelPermalink }}
     <ul>
-      <li><a href="/" {{ if .IsHome }}class="active"{{ end }}>Home</a></li>
-      <li><a href="/prompts/" {{ if eq .Type "prompts" }}class="active"{{ end }}>All Prompts</a></li>
-      <li><a href="/categories/" {{ if eq .Kind "taxonomy" }}class="active"{{ end }}>Categories</a></li>
-      <li><a href="/about/" {{ if eq .Type "page" }}class="active"{{ end }}>About</a></li>
+      <li><a href="/" {{ if $.IsHome }}class="active"{{ end }}>Home</a></li>
+      <li><a href="/builder/" {{ if in $url "/builder/" }}class="active"{{ end }}>Builder</a></li>
+      <li><a href="/prompts/" {{ if in $url "/prompts/" }}class="active"{{ end }}>All Prompts</a></li>
+      <li><a href="/categories/" {{ if in $url "/categories/" }}class="active"{{ end }}>Categories</a></li>
+      <li><a href="/about/" {{ if in $url "/about/" }}class="active"{{ end }}>About</a></li>
     </ul>
   </nav>
 </header>

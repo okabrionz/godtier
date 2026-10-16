@@ -1,9 +1,10 @@
 {{/* Taxonomy terms list (categories) */}}
+{{ define "title" }}{{ .Title }} — {{ site.Title }}{{ end }}
 {{ define "main" }}
-<div class="hero" style="padding-block: 2.5rem 1rem;">
+<div class="gt-hero" style="padding-block: 2.5rem 1rem;">
   <div class="container">
     <h1>{{ .Title }}</h1>
-    <p class="muted">Browse all prompt categories.</p>
+    <p class="lead">Browse all prompt categories.</p>
   </div>
 </div>
 

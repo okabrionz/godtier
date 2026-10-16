@@ -1,10 +1,10 @@
-{{/* List / section template — used for /prompts/ and any section */}}
+{{/* List / section template */}}
 {{ define "title" }}{{ .Title }} — {{ site.Title }}{{ end }}
 {{ define "main" }}
-<div class="hero" style="padding-block: 2.5rem 1rem;">
+<div class="gt-hero" style="padding-block: 2.5rem 1rem;">
   <div class="container">
     <h1>{{ .Title }}</h1>
-    {{ with .Params.description }}<p class="muted">{{ . }}</p>{{ end }}
+    {{ with .Params.description }}<p class="lead">{{ . }}</p>{{ end }}
   </div>
 </div>
 
@@ -19,19 +19,18 @@
       </div>
       <div class="card-meta">
         {{ range .Params.categories }}
-        <span class="badge">{{ . }}</span>
+        <span class="badge">{{ . | title }}</span>
         {{ end }}
         {{ range .Params.tags }}
         <span class="badge">{{ . }}</span>
         {{ end }}
         <span class="badge">{{ .Date.Format "Jan 2, 2006" }}</span>
       </div>
-      <pre class="prompt-preview">{{ .Plain | truncate 220 "" }}</pre>
+      <pre class="prompt-preview">{{ .Plain | truncate 180 "" }}</pre>
       <a href="{{ .RelPermalink }}" class="read-more">Use this prompt →</a>
     </article>
     {{ end }}
   </div>
-
   {{ template "_internal/pagination.html" .Paginator }}
   {{ else }}
   <p>No prompts found.</p>

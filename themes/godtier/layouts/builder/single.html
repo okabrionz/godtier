@@ -1,0 +1,227 @@
+{{ define "title" }}Prompt Builder — {{ site.Title }}{{ end }}
+{{ define "main" }}
+<div class="gt-builder">
+  <div class="container">
+    <h1 style="margin-bottom: .5rem;">🛠️ Prompt Builder</h1>
+    <p class="lead" style="margin-bottom: 2rem;">Build your own god-tier AI prompt. Fill in the fields and copy the result.</p>
+
+    <div class="builder-grid">
+      <!-- Form Column -->
+      <div class="builder-form">
+        <div class="form-group">
+          <label for="task-type">Task Type</label>
+          <select id="task-type">
+            <option value="">Select a category...</option>
+            <option value="Coding">💻 Coding</option>
+            <option value="Writing">✍️ Writing</option>
+            <option value="Marketing">📣 Marketing</option>
+            <option value="Design">🎨 Design</option>
+            <option value="Data">📊 Data Analysis</option>
+            <option value="Business">💼 Business</option>
+            <option value="Education">📚 Education</option>
+            <option value="Other">🔧 Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="specific-task">Specific Task *</label>
+          <textarea id="specific-task" placeholder="What exactly do you want the AI to do? Be as specific as possible."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="context">Context & Background</label>
+          <textarea id="context" placeholder="Any context the AI should know: your role, project details, target audience, etc."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="constraints">Constraints</label>
+          <textarea id="constraints" placeholder="Limitations, things to avoid, rules to follow..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="output-format">Output Format</label>
+            <select id="output-format">
+              <option value="">Select format...</option>
+              <option value="Markdown">Markdown</option>
+              <option value="JSON">JSON</option>
+              <option value="Plain Text">Plain Text</option>
+              <option value="Code">Code</option>
+              <option value="Step-by-step">Step-by-step</option>
+              <option value="Other">Other (specify)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="tone">Tone</label>
+            <select id="tone">
+              <option value="">Select tone...</option>
+              <option value="Professional">Professional</option>
+              <option value="Casual">Casual</option>
+              <option value="Technical">Technical</option>
+              <option value="Persuasive">Persuasive</option>
+              <option value="Educational">Educational</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="audience">Target Audience (optional)</label>
+          <input type="text" id="audience" placeholder="e.g., senior developers, startup founders, marketing managers">
+        </div>
+
+        <div style="display: flex; gap: .75rem; margin-top: 1.5rem;">
+          <button class="btn btn--primary" id="copy-btn">📋 Copy Prompt</button>
+          <button class="btn btn--outline" id="clear-btn">🗑️ Clear All</button>
+        </div>
+      </div>
+
+      <!-- Preview Column -->
+      <div class="builder-preview">
+        <div class="preview-header">
+          <h3>📄 Generated Prompt</h3>
+          <span class="badge" id="word-count">0 words</span>
+        </div>
+        <div class="prompt-output" id="prompt-output">
+          <span style="color: oklch(var(--muted));">Start filling in the form to generate your prompt...</span>
+        </div>
+        <div class="preview-actions">
+          <button class="btn btn--primary" id="copy-btn-2" style="width: 100%; justify-content: center;">📋 Copy to Clipboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const fields = ['task-type', 'specific-task', 'context', 'constraints', 'output-format', 'tone', 'audience'];
+  const output = document.getElementById('prompt-output');
+  const wordCount = document.getElementById('word-count');
+  const copyBtn = document.getElementById('copy-btn');
+  const copyBtn2 = document.getElementById('copy-btn-2');
+  const clearBtn = document.getElementById('clear-btn');
+
+  function getVal(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+
+  function generatePrompt() {
+    const taskType = getVal('task-type');
+    const specificTask = getVal('specific-task');
+    const context = getVal('context');
+    const constraints = getVal('constraints');
+    const outputFormat = getVal('output-format');
+    const tone = getVal('tone');
+    const audience = getVal('audience');
+
+    if (!specificTask && !taskType && !context) {
+      output.innerHTML = '<span style="color: oklch(var(--muted));">Start filling in the form to generate your prompt...</span>';
+      wordCount.textContent = '0 words';
+      return '';
+    }
+
+    let prompt = '';
+
+    // Role
+    if (taskType) {
+      prompt += '## Role\n';
+      prompt += `You are an expert ${taskType.toLowerCase()} specialist with deep knowledge and practical experience.\n\n`;
+    }
+
+    // Task
+    if (specificTask) {
+      prompt += '## Task\n';
+      prompt += specificTask + '\n\n';
+    }
+
+    // Context
+    if (context) {
+      prompt += '## Context\n';
+      prompt += context + '\n\n';
+    }
+
+    // Constraints
+    if (constraints) {
+      prompt += '## Constraints\n';
+      constraints.split('\n').forEach(c => {
+        const t = c.trim();
+        if (t) prompt += `- ${t}\n`;
+      });
+      prompt += '\n';
+    }
+
+    // Output Format
+    if (outputFormat) {
+      prompt += '## Output Format\n';
+      if (outputFormat === 'JSON') {
+        prompt += 'Output ONLY valid JSON. No markdown, no explanation.\n\n';
+      } else if (outputFormat === 'Markdown') {
+        prompt += 'Format output in clean Markdown with proper headings, lists, and code blocks.\n\n';
+      } else if (outputFormat === 'Plain Text') {
+        prompt += 'Output in plain text. No markdown, no special formatting.\n\n';
+      } else if (outputFormat === 'Code') {
+        prompt += 'Output as properly formatted code with comments. Specify the language.\n\n';
+      } else if (outputFormat === 'Step-by-step') {
+        prompt += 'Output as a numbered step-by-step guide. Each step should be actionable.\n\n';
+      } else {
+        prompt += `Format: ${outputFormat}\n\n`;
+      }
+    }
+
+    // Audience
+    if (audience) {
+      prompt += '## Audience\n';
+      prompt += `Target audience: ${audience}\n\n`;
+    }
+
+    // Tone
+    if (tone) {
+      prompt += '## Tone\n';
+      prompt += `Use a ${tone.toLowerCase()} tone throughout.\n\n`;
+    }
+
+    // Anti-patterns
+    prompt += '## Rules\n';
+    prompt += '- Be specific and actionable\n';
+    prompt += '- Avoid generic advice\n';
+    prompt += '- If something is unclear, state your assumption\n';
+
+    output.textContent = prompt;
+    const words = prompt.split(/\s+/).filter(w => w).length;
+    wordCount.textContent = words + ' words';
+    return prompt;
+  }
+
+  function copyPrompt() {
+    const text = output.textContent;
+    if (!text || text.includes('Start filling in')) return;
+    navigator.clipboard.writeText(text).then(() => {
+      [copyBtn, copyBtn2].forEach(btn => {
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => btn.textContent = orig, 2000);
+      });
+    });
+  }
+
+  // Event listeners
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', generatePrompt);
+  });
+  copyBtn.addEventListener('click', copyPrompt);
+  copyBtn2.addEventListener('click', copyPrompt);
+  clearBtn.addEventListener('click', () => {
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    generatePrompt();
+  });
+
+  // Initial
+  generatePrompt();
+})();
+</script>
+{{ end }}

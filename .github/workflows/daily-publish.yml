@@ -1,21 +1,22 @@
 # Daily Prompt Publish — GitHub Actions
-# Trigger: cron (setiap hari jam 8 AM WIB = 1 AM UTC) + manual
-# Job 1: Generate prompt candidates → rank → publish to Hugo content
+# Trigger: cron (setiap hari jam 7 AM WIB = 0 AM UTC) + manual
+# Job 1: Generate 10 prompt candidates → rank → publish top 10 to Hugo content
 # Job 2: Build Hugo → deploy ke GitHub Pages
 
 name: Daily Prompt Publish
 
 on:
   schedule:
-    - cron: "0 1 * * *"   # 8 AM WIB (UTC+7) = 1 AM UTC
+    - cron: "0 0 * * *"   # 7 AM WIB (UTC+7) = 0 AM UTC
   workflow_dispatch:
 
 jobs:
   generate-publish:
     runs-on: ubuntu-latest
     outputs:
-      prompt_title: ${{ steps.publish.outputs.prompt_title }}
-      prompt_score: ${{ steps.publish.outputs.prompt_score }}
+      prompt_count: ${{ steps.publish.outputs.prompt_count }}
+      best_title: ${{ steps.publish.outputs.best_title }}
+      best_score: ${{ steps.publish.outputs.best_score }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,14 +31,24 @@ jobs:
       - name: Install dependencies
         run: pip install requests pyyaml
 
-      - name: Generate & publish prompt
+      - name: Generate & publish 10 prompts
         id: publish
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CANDIDATES: "10"
+          PUBLISH_COUNT: "10"
         run: |
           python scripts/generate_and_publish.py
+          if [ -f .github/daily_summary.txt ]; then
+            echo "prompt_count=$(grep prompt_count .github/daily_summary.txt | cut -d= -f2)" >> $GITHUB_OUTPUT
+            echo "best_title=$(grep best_title .github/daily_summary.txt | cut -d= -f2)" >> $GITHUB_OUTPUT
+            echo "best_score=$(grep best_score .github/daily_summary.txt | cut -d= -f2)" >> $GITHUB_OUTPUT
+          else
+            echo "prompt_count=0" >> $GITHUB_OUTPUT
+            echo "best_title=No prompts generated" >> $GITHUB_OUTPUT
+            echo "best_score=0" >> $GITHUB_OUTPUT
+          fi
         working-directory: ./
         continue-on-error: false
 
@@ -45,8 +56,8 @@ jobs:
         run: |
           git config user.name "GodTier Bot"
           git config user.email "bot@godtier.store"
-          git add content/prompts/ static/ 2>/dev/null || true
-          git diff --quiet || git commit -m "🤖 Daily prompt: ${{ steps.publish.outputs.prompt_title }} (${{ steps.publish.outputs.prompt_score }}/10)"
+          git add content/prompts/ static/ .github/daily_summary.txt 2>/dev/null || true
+          git diff --quiet || git commit -m "🤖 10 daily prompts (${{ steps.publish.outputs.prompt_count }} published, best: ${{ steps.publish.outputs.best_title }} ${{ steps.publish.outputs.best_score }}/10)"
           git push
 
   build-deploy:
@@ -71,4 +82,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
           cname: godtier.store
-          commit_message: "🚀 Deploy: Daily prompt — ${{ needs.generate-publish.outputs.prompt_title }}"
+          commit_message: "🚀 Deploy: 10 daily prompts — best: ${{ needs.generate-publish.outputs.best_title }} (${{ needs.generate-publish.outputs.best_score }}/10)"

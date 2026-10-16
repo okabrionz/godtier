@@ -2,9 +2,9 @@
 """
 God Tier Prompt Generator & Publisher
 =====================================
-Generates prompt candidates via LLM (Hugging Face Inference or OpenAI),
+Generates 10 prompt candidates per day via LLM (HuggingFace Inference or OpenAI),
 ranks them on 4 metrics (clarity, specificity, structure, usefulness),
-selects the best, and publishes as a Hugo content markdown file.
+selects top 10, and publishes as Hugo content markdown files.
 
 Usage:
     python scripts/generate_and_publish.py
@@ -12,7 +12,8 @@ Usage:
 Environment:
     HF_TOKEN          — HuggingFace Inference API token (free tier)
     OPENAI_API_KEY    — OpenAI API key (fallback)
-    CANDIDATES        — number of prompt candidates to generate (default: 5)
+    CANDIDATES        — number of prompt candidates to generate (default: 10)
+    PUBLISH_COUNT     — number of top prompts to publish (default: 10)
     OUTPUT_DIR        — where to write markdown files (default: content/prompts)
 """
 
@@ -20,20 +21,19 @@ import os
 import sys
 import json
 import random
-import hashlib
 import subprocess
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import requests
-import yaml
 
 # ─── Config ───────────────────────────────────────────────
 
 SITE_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", str(SITE_ROOT / "content" / "prompts"))
-CANDIDATES = int(os.getenv("CANDIDATES", "5"))
+CANDIDATES = int(os.getenv("CANDIDATES", "10"))
+PUBLISH_COUNT = int(os.getenv("PUBLISH_COUNT", "10"))
 
-# ─── Topic pool ──────────────────────────────────────────
+# ─── 10 Topic pool ───────────────────────────────────────
 
 TOPICS = [
     {"category": "Coding", "tags": ["python", "typescript", "refactoring"], "prompt_type": "code review and refactoring"},
@@ -44,6 +44,8 @@ TOPICS = [
     {"category": "Productivity", "tags": ["automation", "workflow", "ai-agent"], "prompt_type": "AI automation workflow design"},
     {"category": "Education", "tags": ["tutorial", "explanation", "learning"], "prompt_type": "step-by-step tutorial with examples"},
     {"category": "Business", "tags": ["strategy", "pitch", "proposal"], "prompt_type": "business proposal and pitch deck"},
+    {"category": "Research", "tags": ["paper", "synthesis", "citation"], "prompt_type": "academic research synthesis and literature review"},
+    {"category": "Communication", "tags": ["email", "negotiation", "writing"], "prompt_type": "persuasive professional communication"},
 ]
 
 # ─── Prompt generation templates ─────────────────────────
@@ -84,22 +86,15 @@ Output ONLY valid JSON (no markdown, no explanation):
 # ─── LLM clients ─────────────────────────────────────────
 
 def generate_with_hf(prompt_text: str, max_tokens: int = 1200) -> str:
-    """Generate text using HuggingFace Inference API (free tier)."""
     token = os.getenv("HF_TOKEN", "")
     if not token:
         raise ValueError("HF_TOKEN not set")
-
-    # Use a capable free model (Mixtral 8x7B via HF Inference)
     model = "mistralai/Mixtral-8x7B-Instruct-v0.1"
     url = f"https://api-inference.huggingface.co/models/{model}"
     headers = {"Authorization": f"Bearer {token}"}
     payload = {
         "inputs": prompt_text,
-        "parameters": {
-            "max_new_tokens": max_tokens,
-            "temperature": 0.8,
-            "return_full_text": False,
-        },
+        "parameters": {"max_new_tokens": max_tokens, "temperature": 0.8, "return_full_text": False},
     }
     resp = requests.post(url, headers=headers, json=payload, timeout=120)
     resp.raise_for_status()
@@ -110,16 +105,11 @@ def generate_with_hf(prompt_text: str, max_tokens: int = 1200) -> str:
 
 
 def generate_with_openai(prompt_text: str, max_tokens: int = 1200) -> str:
-    """Generate text using OpenAI API (fallback)."""
     api_key = os.getenv("OPENAI_API_KEY", "")
     if not api_key:
         raise ValueError("OPENAI_API_KEY not set")
-
     url = "https://api.openai.com/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
         "model": "gpt-4o",
         "messages": [
@@ -136,7 +126,6 @@ def generate_with_openai(prompt_text: str, max_tokens: int = 1200) -> str:
 
 
 def generate_text(prompt_text: str) -> str:
-    """Try HF Inference first, fall back to OpenAI."""
     try:
         return generate_with_hf(prompt_text)
     except Exception as e:
@@ -144,63 +133,46 @@ def generate_text(prompt_text: str) -> str:
         return generate_with_openai(prompt_text)
 
 
-# ─── Prompt generation pipeline ──────────────────────────
+# ─── Pipeline ────────────────────────────────────────────
 
 def generate_candidates() -> list[dict]:
-    """Generate multiple prompt candidates."""
     candidates = []
     random.shuffle(TOPICS)
-
     for i in range(min(CANDIDATES, len(TOPICS))):
         topic = TOPICS[i]
         print(f"\n[{i+1}/{CANDIDATES}] Generating: {topic['category']} — {topic['prompt_type']}")
-
         gen_prompt = GENERATION_TEMPLATE.format(
-            topic=topic["prompt_type"],
-            category=topic["category"],
-            tags=", ".join(topic["tags"]),
-            prompt_type=topic["prompt_type"],
+            topic=topic["prompt_type"], category=topic["category"],
+            tags=", ".join(topic["tags"]), prompt_type=topic["prompt_type"],
         )
-
         try:
             generated = generate_text(gen_prompt)
-            # Clean up: strip markdown fences if present
             generated = generated.strip()
             if generated.startswith("```"):
                 generated = generated.split("\n", 1)[1] if "\n" in generated else generated
             if generated.endswith("```"):
                 generated = generated.rsplit("```", 1)[0]
-
             candidates.append({
-                "category": topic["category"],
-                "tags": topic["tags"],
-                "prompt_type": topic["prompt_type"],
-                "text": generated,
+                "category": topic["category"], "tags": topic["tags"],
+                "prompt_type": topic["prompt_type"], "text": generated,
             })
             print(f"  Generated {len(generated)} chars")
         except Exception as e:
             print(f"  FAILED: {e}", file=sys.stderr)
             continue
-
     return candidates
 
 
 def rank_prompt(prompt_text: str) -> dict:
-    """Rank a prompt using LLM evaluation."""
-    print("  Ranking...")
     rank_prompt_text = RANKING_TEMPLATE.format(prompt=prompt_text)
-
     try:
         result = generate_text(rank_prompt_text)
-        # Parse JSON from result
-        # Strip markdown fences
         result = result.strip()
         if result.startswith("```"):
             result = result.split("\n", 1)[1] if "\n" in result else result
         if result.endswith("```"):
             result = result.rsplit("```", 1)[0]
         result = result.strip()
-
         scores = json.loads(result)
         return {
             "clarity": int(scores.get("clarity", 5)),
@@ -211,29 +183,21 @@ def rank_prompt(prompt_text: str) -> dict:
         }
     except Exception as e:
         print(f"  Ranking failed: {e}", file=sys.stderr)
-        # Fallback: random-ish score
         return {
-            "clarity": random.randint(6, 8),
-            "specificity": random.randint(6, 8),
-            "structure": random.randint(6, 8),
-            "usefulness": random.randint(6, 8),
+            "clarity": random.randint(6, 8), "specificity": random.randint(6, 8),
+            "structure": random.randint(6, 8), "usefulness": random.randint(6, 8),
             "overall": random.uniform(6, 8),
         }
 
 
 def rank_candidates(candidates: list[dict]) -> list[dict]:
-    """Rank all candidates and add scores."""
     for c in candidates:
         c["scores"] = rank_prompt(c["text"])
-    # Sort by overall score descending
     candidates.sort(key=lambda x: x["scores"]["overall"], reverse=True)
     return candidates
 
 
-# ─── Publish to Hugo content ─────────────────────────────
-
 def slugify(text: str) -> str:
-    """Create a URL-safe slug from prompt text."""
     slug = text.lower().strip()
     slug = "".join(c if c.isalnum() or c in (" ", "-") else "" for c in slug)
     slug = slug.replace(" ", "-")
@@ -242,22 +206,14 @@ def slugify(text: str) -> str:
 
 
 def generate_markdown(candidate: dict, date: datetime) -> str:
-    """Generate Hugo markdown content for a prompt."""
     title = f"God Tier {candidate['category']} Prompt: {candidate['prompt_type'].title()}"
     slug = slugify(title)
-    date_str = date.strftime("%Y-%m-%d")
     datetime_str = date.strftime("%Y-%m-%dT%H:%M:%S+07:00")
-
-    # Clean up prompt text for markdown
     prompt_text = candidate["text"].strip()
-
-    # If prompt_text doesn't start with ##, add a title
     if not prompt_text.startswith("##"):
         prompt_text = f"## {title}\n\n{prompt_text}"
-
     tags_inline = "[" + ", ".join(candidate["tags"]) + "]"
     categories_inline = "[" + candidate["category"] + "]"
-
     md = f"""---
 title: "{title.replace('"', "'")}"
 date: {datetime_str}
@@ -275,76 +231,58 @@ examples: ""
     return md, title, slug
 
 
-def publish_prompt(candidate: dict) -> dict:
-    """Publish the best prompt as a Hugo content file."""
-    date = datetime.now(timezone(timedelta(hours=7)))  # WIB
+def publish_prompt(candidate: dict, date: datetime) -> dict:
     year = date.strftime("%Y")
-
     md_content, title, slug = generate_markdown(candidate, date)
-
-    # Create directory: content/prompts/YYYY/
     output_path = Path(OUTPUT_DIR) / year
     output_path.mkdir(parents=True, exist_ok=True)
-
     filename = output_path / f"{slug}.md"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(md_content)
+    print(f"  ✓ {title} ({candidate['scores']['overall']:.1f}/10) → {filename.relative_to(SITE_ROOT)}")
+    return {"title": title, "score": f"{candidate['scores']['overall']:.1f}", "file": str(filename.relative_to(SITE_ROOT))}
 
-    print(f"\n✓ Published: {filename.relative_to(SITE_ROOT)}")
-    print(f"  Title: {title}")
-    print(f"  Score: {candidate['scores']['overall']:.1f}/10")
-
-    return {
-        "prompt_title": title,
-        "prompt_score": f"{candidate['scores']['overall']:.1f}",
-        "file": str(filename.relative_to(SITE_ROOT)),
-    }
-
-
-# ─── GitHub Actions output ────────────────────────────────
 
 def set_github_output(key: str, value: str):
-    """Set GitHub Actions output variable."""
     if os.getenv("GITHUB_OUTPUT"):
         with open(os.environ["GITHUB_OUTPUT"], "a") as f:
             f.write(f"{key}={value}\n")
     print(f"::{key}={value}")
 
 
-# ─── Main ─────────────────────────────────────────────────
-
 def main():
     print("=" * 60)
-    print("  God Tier Prompt Generator & Publisher")
+    print("  God Tier Prompt Generator & Publisher (10/day)")
     print("=" * 60)
-
-    # 1. Generate candidates
-    print("\n📝 Generating prompt candidates...")
+    date = datetime.now(timezone(timedelta(hours=7)))
+    print(f"\n📝 Generating {CANDIDATES} prompt candidates...")
     candidates = generate_candidates()
     if not candidates:
         print("ERROR: No candidates generated. Check API keys.", file=sys.stderr)
         sys.exit(1)
-
     print(f"\n✓ Generated {len(candidates)} candidates")
-
-    # 2. Rank candidates
     print("\n🏆 Ranking candidates...")
     ranked = rank_candidates(candidates)
-
     print("\n--- Leaderboard ---")
     for i, c in enumerate(ranked, 1):
         print(f"  {i}. {c['category']}/{c['prompt_type']} — {c['scores']['overall']:.1f}/10")
-
-    # 3. Publish best
-    print("\n📤 Publishing best prompt...")
-    best = ranked[0]
-    result = publish_prompt(best)
-
-    # 4. Set GitHub Actions outputs
-    set_github_output("prompt_title", result["prompt_title"])
-    set_github_output("prompt_score", result["prompt_score"])
-
-    print("\n✅ Done! Best prompt published.")
+    publish_n = min(PUBLISH_COUNT, len(ranked))
+    print(f"\n📤 Publishing top {publish_n} prompts...")
+    published = []
+    for c in ranked[:publish_n]:
+        result = publish_prompt(c, date)
+        published.append(result)
+    titles = [p["title"] for p in published]
+    scores = [p["score"] for p in published]
+    best = published[0]
+    summary_file = SITE_ROOT / ".github" / "daily_summary.txt"
+    with open(summary_file, "w", encoding="utf-8") as f:
+        f.write(f"prompt_count={len(published)}\n")
+        f.write(f"best_title={best['title']}\n")
+        f.write(f"best_score={best['score']}\n")
+        f.write(f"titles={'|'.join(titles)}\n")
+        f.write(f"scores={'|'.join(scores)}\n")
+    print(f"\n✅ Published {len(published)} prompts for {date.strftime('%Y-%m-%d')}")
     return 0
 
 

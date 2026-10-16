@@ -2,19 +2,19 @@
 """
 God Tier Prompt Generator & Publisher
 =====================================
-Generates 10 prompt candidates per day via LLM (HuggingFace Inference or OpenAI),
-ranks them on 4 metrics (clarity, specificity, structure, usefulness),
-selects top 10, and publishes as Hugo content markdown files.
+Generates 10 prompt candidates per day via LLM — HF Inference (PRIMARY) —
+with Groq and OpenRouter as free-model fallbacks.
 
 Usage:
     python scripts/generate_and_publish.py
 
 Environment:
-    HF_TOKEN          — HuggingFace Inference API token (free tier)
-    OPENAI_API_KEY    — OpenAI API key (fallback)
-    CANDIDATES        — number of prompt candidates to generate (default: 10)
-    PUBLISH_COUNT     — number of top prompts to publish (default: 10)
-    OUTPUT_DIR        — where to write markdown files (default: content/prompts)
+    HF_TOKEN           — HuggingFace Inference API token (PRIMARY, always)
+    GROQ_API_KEY       — Groq API key (fallback #1)
+    OPENROUTER_API_KEY — OpenRouter API key (fallback #2)
+    CANDIDATES         — number of prompt candidates to generate (default: 10)
+    PUBLISH_COUNT      — number of top prompts to publish (default: 10)
+    OUTPUT_DIR         — where to write markdown files (default: content/prompts)
 """
 
 import os
@@ -86,6 +86,7 @@ Output ONLY valid JSON (no markdown, no explanation):
 # ─── LLM clients ─────────────────────────────────────────
 
 def generate_with_hf(prompt_text: str, max_tokens: int = 1200) -> str:
+    """Generate text using HuggingFace Inference API — PRIMARY model."""
     token = os.getenv("HF_TOKEN", "")
     if not token:
         raise ValueError("HF_TOKEN not set")
@@ -104,20 +105,51 @@ def generate_with_hf(prompt_text: str, max_tokens: int = 1200) -> str:
     return str(result)
 
 
-def generate_with_openai(prompt_text: str, max_tokens: int = 1200) -> str:
-    api_key = os.getenv("OPENAI_API_KEY", "")
+def generate_with_groq(prompt_text: str, max_tokens: int = 1200) -> str:
+    """Generate text using Groq API — free Llama/ Mixtral models (fallback)."""
+    api_key = os.getenv("GROQ_API_KEY", "")
     if not api_key:
-        raise ValueError("OPENAI_API_KEY not set")
-    url = "https://api.openai.com/v1/chat/completions"
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        raise ValueError("GROQ_API_KEY not set")
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
     payload = {
-        "model": "gpt-4o",
+        "model": "llama-3.3-70b-versatile",
         "messages": [
             {"role": "system", "content": "You are a world-class AI prompt engineer."},
             {"role": "user", "content": prompt_text},
         ],
         "max_tokens": max_tokens,
-        "temperature": 0.8,
+        "temperature": 0.7,
+    }
+    resp = requests.post(url, headers=headers, json=payload, timeout=120)
+    resp.raise_for_status()
+    result = resp.json()
+    return result["choices"][0]["message"]["content"]
+
+
+def generate_with_openrouter(prompt_text: str, max_tokens: int = 1200) -> str:
+    """Generate text using OpenRouter API — free models (fallback)."""
+    api_key = os.getenv("OPENROUTER_API_KEY", "")
+    if not api_key:
+        raise ValueError("OPENROUTER_API_KEY not set")
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://godtier.store",
+        "X-Title": "God Tier Prompts",
+    }
+    payload = {
+        "model": "openai/gpt-oss-20b",
+        "messages": [
+            {"role": "system", "content": "You are a world-class AI prompt engineer."},
+            {"role": "user", "content": prompt_text},
+        ],
+        "max_tokens": max_tokens,
+        "temperature": 0.7,
     }
     resp = requests.post(url, headers=headers, json=payload, timeout=120)
     resp.raise_for_status()
@@ -126,11 +158,24 @@ def generate_with_openai(prompt_text: str, max_tokens: int = 1200) -> str:
 
 
 def generate_text(prompt_text: str) -> str:
+    """Generate text: HF (primary) → Groq → OpenRouter."""
+    # Try HF Inference first
     try:
         return generate_with_hf(prompt_text)
     except Exception as e:
         print(f"  HF Inference failed: {e}", file=sys.stderr)
-        return generate_with_openai(prompt_text)
+    # Fallback: Groq
+    try:
+        return generate_with_groq(prompt_text)
+    except Exception as e:
+        print(f"  Groq failed: {e}", file=sys.stderr)
+    # Fallback: OpenRouter
+    try:
+        return generate_with_openrouter(prompt_text)
+    except Exception as e:
+        print(f"  OpenRouter failed: {e}", file=sys.stderr)
+    # All failed
+    raise ValueError("All LLM APIs failed: HF, Groq, OpenRouter")
 
 
 # ─── Pipeline ────────────────────────────────────────────
@@ -258,7 +303,7 @@ def main():
     print(f"\n📝 Generating {CANDIDATES} prompt candidates...")
     candidates = generate_candidates()
     if not candidates:
-        print("ERROR: No candidates generated. Check API keys.", file=sys.stderr)
+        print("ERROR: No candidates generated. Check API keys (HF_TOKEN, GROQ_API_KEY, OPENROUTER_API_KEY).", file=sys.stderr)
         sys.exit(1)
     print(f"\n✓ Generated {len(candidates)} candidates")
     print("\n🏆 Ranking candidates...")

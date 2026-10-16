@@ -63,13 +63,27 @@ hugo server --buildDrafts
 
 ### GitHub Actions Setup
 
-1. Create a new GitHub repo
-2. Push this code
-3. Go to **Settings → Secrets and variables → Actions** and add:
-   - `HF_TOKEN` — your HuggingFace Inference API token (free)
-   - or `OPENAI_API_KEY` — your OpenAI API key
-4. Go to **Settings → Pages** and set source to **GitHub Actions**
-5. Run the workflow manually: **Actions → Daily Prompt Publish → Run workflow**
+1. **Create a new GitHub repo** (e.g., `god-tier-prompts`)
+2. **Push this code:**
+   ```bash
+   cd god-tier-prompts
+   git remote add origin https://github.com/YOUR_USERNAME/god-tier-prompts.git
+   git push -u origin main
+   ```
+3. **Add API secrets** — Go to **Settings → Secrets and variables → Actions** and add:
+   - `HF_TOKEN` — your [HuggingFace Inference API token](https://huggingface.co/settings/tokens) (free tier works)
+   - or `OPENAI_API_KEY` — your OpenAI API key (fallback)
+4. **Enable GitHub Pages** — Go to **Settings → Pages** and set:
+   - Source: **GitHub Actions**
+   - Branch: `main` (or whichever branch)
+5. **Run the workflow manually** — Go to **Actions → Daily Prompt Publish → Run workflow**
+6. **Set up domain** (optional) — Go to **Settings → Pages → Custom domain** and enter `godtier.store`, then update your DNS with the GitHub Pages CNAME
+
+The workflow runs daily at **1 AM UTC (8 AM WIB)**. It will:
+- Generate 5 prompt candidates via HF Inference API
+- Rank them on clarity, specificity, structure, usefulness
+- Publish the best one as `content/prompts/YYYY/slug.md`
+- Build Hugo and deploy to GitHub Pages
 
 ### Customization
 

@@ -1,0 +1,31 @@
+# God Tier Prompts — gitignore
+
+# Hugo build output
+/public/
+/resources/
+/hugo_stats.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# Secrets
+.env
+.env.local
+*.key
+
+# Scratch
+scratch/

@@ -1,0 +1,78 @@
+{{/* Single page template — used for prompt detail + static pages */}}
+{{ define "title" }}{{ .Title }} — {{ site.Title }}{{ end }}
+{{ define "main" }}
+{{ if eq .Type "prompts" }}
+
+{{/* Prompt detail page */}}
+{{ $p := . }}
+<div class="gt-prompt-detail">
+  <article class="prompt-meta-bar">
+    <div>
+      {{ with $p.Params.categories }}
+      {{ range . }}<a href="{{ "categories/" | relLangURL }}{{ . | urlize | lower }}" class="badge">{{ . }}</a>{{ end }}
+      {{ end }}
+      {{ range $p.Params.tags }}
+      <a href="{{ "tags/" | relLangURL }}{{ . | urlize | lower }}" class="badge">{{ . }}</a>
+      {{ end }}
+      <span class="badge">{{ $p.Date.Format "Jan 2, 2006" }}</span>
+      <span class="badge model-badge {{ $p.Params.model | default "multi" }}">{{ $p.Params.model | default "Multi-Model" }}</span>
+    </div>
+
+    {{ if $p.Params.best_score }}
+    <span class="prompt-score">
+      {{ $p.Params.best_score }}/10 <span class="star">★</span>
+    </span>
+    {{ end }}
+  </article>
+
+  <h1>{{ $p.Title }}</h1>
+
+  <div class="prompt-content">
+    <div class="code-block">
+      <button class="copy-btn" data-target="prompt-text" title="Copy to clipboard">📋</button>
+      <pre class="prompt-text" id="prompt-text">{{ $p.Content }}</pre>
+    </div>
+  </div>
+
+  {{ if $p.Params.usage_notes }}
+  <div class="usage-notes">
+    <h4>📋 Usage Notes</h4>
+    <p>{{ $p.Params.usage_notes | markdownify }}</p>
+  </div>
+  {{ end }}
+
+  {{ if $p.Params.examples }}
+  <div class="usage-notes" style="margin-top: 1rem;">
+    <h4>💡 Example Output</h4>
+    <p>{{ $p.Params.examples | markdownify }}</p>
+  </div>
+  {{ end }}
+
+  <footer class="gt-footer" style="margin-top: 2rem;">
+    <p><a href="/prompts/">← Back to all prompts</a> · 
+       Published {{ $p.Date.Format "January 2, 2006" }}.</p>
+  </footer>
+</div>
+
+<script>
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.getAttribute('data-target');
+    const el = document.getElementById(target);
+    if (!el) return;
+    navigator.clipboard.writeText(el.textContent).then(() => {
+      btn.textContent = '✓';
+      setTimeout(() => btn.textContent = '📋', 2000);
+    });
+  });
+});
+</script>
+
+{{ else }}
+{{/* Static page (about, etc.) */}}
+<div class="container" style="margin-block: 3rem;">
+  <h1>{{ .Title }}</h1>
+  {{ .Content }}
+</div>
+{{ end }}
+{{ end }}

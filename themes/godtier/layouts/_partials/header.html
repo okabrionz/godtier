@@ -1,0 +1,14 @@
+{{/* Site header + nav */}}
+<header class="gt-header">
+  <nav class="gt-nav">
+    <div class="logo">
+      <span class="spark">⚡</span> GodTier
+    </div>
+    <ul>
+      <li><a href="/" {{ if .IsHome }}class="active"{{ end }}>Home</a></li>
+      <li><a href="/prompts/" {{ if eq .Type "prompts" }}class="active"{{ end }}>All Prompts</a></li>
+      <li><a href="/categories/" {{ if eq .Kind "taxonomy" }}class="active"{{ end }}>Categories</a></li>
+      <li><a href="/about/" {{ if eq .Type "page" }}class="active"{{ end }}>About</a></li>
+    </ul>
+  </nav>
+</header>

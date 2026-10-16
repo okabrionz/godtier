@@ -1,0 +1,80 @@
+{{ define "title" }}{{ site.Title }}{{ end }}
+{{ define "main" }}
+
+{{/* Home: Prompt of the Day + Recent prompts */}}
+{{ $allPrompts := where site.RegularPages "Type" "prompts" }}
+{{ $latest := index $allPrompts 0 }}
+
+<div class="hero">
+  <div class="container">
+    <h1>God Tier Prompts</h1>
+    <p class="muted">One <strong class="brand">god-tier AI prompt</strong> published every day — ranked, tested, ready to copy. 
+       Works with GPT, Claude, Gemini, &amp; every LLM.</p>
+    <div style="margin-top: 2rem;">
+      <a href="/prompts/" class="btn btn--primary">📚 Browse All Prompts</a>
+      <a href="#today" class="btn btn--outline">⚡ Today's Best</a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  {{ if $latest }}
+  {{/* Today's featured prompt */}}
+  <section id="today" style="margin-block: 3rem 2rem;">
+    <div style="display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem;">
+      <h2 style="margin: 0;">🔥 Prompt of the Day</h2>
+      <span class="badge badge--brand">{{ $latest.Date.Format "Mon, Jan 2, 2006" }}</span>
+    </div>
+
+    <article class="gt-prompt-card" style="background: oklch(var(--c-surface2));">
+      <div class="card-head">
+        <h3 class="card-title"><a href="{{ $latest.RelPermalink }}">{{ $latest.Title }}</a></h3>
+        <span class="badge">{{ $latest.Params.model | default "Multi-Model" }}</span>
+      </div>
+
+      <div class="card-meta">
+        {{ range $latest.Params.categories }}
+        <span class="badge">{{ . }}</span>
+        {{ end }}
+        {{ range $latest.Params.tags }}
+        <span class="badge">{{ . }}</span>
+        {{ end }}
+        {{ if $latest.Params.best_score }}
+        <span class="badge">Score: {{ $latest.Params.best_score }}/10</span>
+        {{ end }}
+      </div>
+
+      <pre class="prompt-preview">{{ $latest.Plain | truncate 250 "" }}</pre>
+
+      <a href="{{ $latest.RelPermalink }}" class="read-more">Use this prompt →</a>
+    </article>
+  </section>
+  {{ end }}
+
+  {{/* Latest 6 prompts */}}
+  <section style="margin-block: 3rem 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h2 style="margin: 0;">Recent Prompts</h2>
+      <a href="/prompts/" class="muted">View all →</a>
+    </div>
+
+    <div class="gt-prompt-grid">
+      {{ range first 6 (after 1 $allPrompts) }}
+      <article class="gt-prompt-card">
+        <div class="card-head">
+          <h3 class="card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+          <span class="badge">{{ .Params.model | default "Multi" }}</span>
+        </div>
+        <div class="card-meta">
+          {{ range .Params.tags }}
+          <span class="badge">{{ . }}</span>
+          {{ end }}
+        </div>
+        <pre class="prompt-preview">{{ .Plain | truncate 200 "" }}</pre>
+        <a href="{{ .RelPermalink }}" class="read-more">Open →</a>
+      </article>
+      {{ end }}
+    </div>
+  </section>
+</div>
+{{ end }}

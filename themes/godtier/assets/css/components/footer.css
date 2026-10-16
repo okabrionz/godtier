@@ -1,0 +1,30 @@
+/* Footer */
+.gt-footer {
+  border-top: 1px solid oklch(var(--c-border));
+  margin-top: 3rem;
+  padding-top: 2rem;
+  text-align: center;
+  color: oklch(var(--c-muted));
+  font-size: .85rem;
+}
+.gt-footer a { color: oklch(var(--c-brand)); }
+.gt-footer .social {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: .75rem;
+}
+.gt-footer .social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem; height: 2rem;
+  border: 1px solid oklch(var(--c-border));
+  border-radius: .3rem;
+  color: oklch(var(--c-muted));
+  transition: all .2s;
+}
+.gt-footer .social a:hover {
+  border-color: oklch(var(--c-brand));
+  color: oklch(var(--c-brand));
+}

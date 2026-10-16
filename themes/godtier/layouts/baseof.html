@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {{ partial "head/meta" . }}
+  {{ partial "head/css" . }}
+  {{ partial "head/seo" . }}
+</head>
+<body class="theme-light">
+  {{ partial "header" . }}
+
+  <main>
+    {{ block "main" . }}{{ end }}
+  </main>
+
+  {{ partial "footer" . }}
+
+  {{ partial "head/js" . }}
+</body>
+</html>

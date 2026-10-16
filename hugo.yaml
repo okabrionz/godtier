@@ -1,0 +1,102 @@
+# ─────────────────────────────────────────────
+# God Tier Prompts — Hugo config
+# godtier.store
+# ─────────────────────────────────────────────
+baseURL: "https://godtier.store"
+defaultContentLanguage: "en"
+title: "God Tier Prompts"
+theme: "godtier"
+
+pagination:
+  disableAliases: false
+  pagerSize: 12
+
+summaryLength: 30
+
+# Security
+security:
+  exec:
+    allow:
+      - "^layouts/"
+      - "^content/"
+      - "^assets/"
+
+# Markup
+markup:
+  defaultMarkdownHandler: "goldmark"
+  goldmark:
+    renderer:
+      unsafe: true
+  highlight:
+    style: "catppuccin-mocha"
+    lineNos: true
+    guessSyntax: true
+
+# Sitemap
+sitemap:
+  changefreq: "daily"
+  priority: 0.8
+
+# Permalinks
+permalinks:
+  prompts: "/prompts/:year/:slug/"
+
+# Params
+params:
+  author: "God Tier"
+  description: "Daily curated god-tier AI prompts for all models. Generate, rank, and publish the best prompt every day."
+  keywords: "ai,prompt,ai-prompt,god-tier,daily-prompt,openai,anthropic,llm"
+  mainLogo: "⚡"
+
+  colors:
+    brand: "#ff2b4f"
+    bg: "#0a0a0d"
+    surface: "#111118"
+    border: "#252529"
+    text: "#e4e4e7"
+    muted: "#8a8a99"
+
+  social:
+    github: "https://github.com/okabrionz"
+
+  apiEndpoint: "/api/best/"
+
+# Outputs
+outputs:
+  home: ["HTML", "RSS"]
+  page: ["HTML"]
+  taxonomy: ["HTML", "RSS"]
+  term: ["HTML", "RSS"]
+
+outputFormats:
+  RSS:
+    mediaType: "application/rss+xml"
+    baseName: "feed"
+
+# Module mounts
+module:
+  mounts:
+    - source: content
+      target: content
+    - source: static
+      target: static
+    - source: layouts
+      target: layouts
+    - source: data
+      target: data
+    - source: assets
+      target: assets
+    - source: arities
+      target: arities
+    - source: i18n
+      target: i18n
+    - source: ../themes/godtier/content
+      target: content
+    - source: ../themes/godtier/static
+      target: static
+    - source: ../themes/godtier/layouts
+      target: layouts
+    - source: ../themes/godtier/assets
+      target: assets
+    - source: ../themes/godtier/data
+      target: data

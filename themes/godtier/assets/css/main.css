@@ -1,0 +1,151 @@
+/* ════════════════════════════════════════════════════════
+   GodTier theme — Dark minimal + red accent (OKLCH tuned)
+   godtier.store
+   ════════════════════════════════════════════════════════ */
+
+@import "components/header.css";
+@import "components/footer.css";
+@import "components/prompt-card.css";
+@import "components/prompt-detail.css";
+@import "components/code.css";
+
+/* ── Design tokens ── */
+:root {
+  --c-bg:        0.082 0.005 250;
+  --c-surface:   0.106 0.010 255;
+  --c-surface2:  0.141 0.015 258;
+  --c-border:    0.200 0.030 255;
+  --c-text:      0.920 0.020 250;
+  --c-muted:     0.625 0.020 255;
+  --c-brand:     0.630 0.300 25;
+  --c-brand-d:   0.580 0.260 25;
+}
+
+/* ── Reset + base ── */
+*, *::before, *::after { box-sizing: border-box; }
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+  scroll-padding-top: 4rem;
+}
+body {
+  margin: 0;
+  background: oklch(var(--c-bg));
+  color: oklch(var(--c-text));
+  font-family: "Satoshi", "Inter", -apple-system, BlinkMacSystemFont,
+               "Segoe UI", Roboto, sans-serif;
+  line-height: 1.7;
+  font-weight: 400;
+}
+img, picture, svg, video { display: block; max-width: 100%; height: auto; }
+button { font: inherit; cursor: pointer; border: none; }
+a { color: inherit; text-decoration: none; }
+a:focus-visible { outline: 2px solid oklch(var(--c-brand)); outline-offset: 2px; border-radius: 3px; }
+ul, ol { margin: 0 0 1em 0; padding-left: 1.25rem; }
+
+/* ── Layout ── */
+.container {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  padding-block: 1.5rem;
+}
+.grid { display: grid; gap: 1.5rem; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.muted { color: oklch(var(--c-muted)); }
+.brand { color: oklch(var(--c-brand)); font-weight: 700; }
+
+/* ── Typography ── */
+h1, h2, h3, h4 {
+  font-family: "Satoshi", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  margin: 0 0 .75rem;
+  color: oklch(var(--c-text));
+}
+h1 { font-size: clamp(2.25rem, 5vw, 3rem); }
+h2 { font-size: clamp(1.5rem, 4vw, 2rem); }
+h3 { font-size: clamp(1.2rem, 3vw, 1.5rem); }
+p { margin: 0 0 1em; }
+
+/* ── Badges / tags ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  padding: .2rem .6rem;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  border: 1px solid oklch(var(--c-border));
+  background: oklch(var(--c-surface2));
+  color: oklch(var(--c-muted));
+}
+.badge--brand {
+  background: oklch(var(--c-brand) / .15);
+  border-color: oklch(var(--c-brand) / .5);
+  color: oklch(var(--c-brand));
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .6rem 1.2rem;
+  border-radius: .4rem;
+  font-weight: 600;
+  font-size: .9rem;
+  transition: background .15s ease, transform .05s ease;
+}
+.btn--primary {
+  background: oklch(var(--c-brand));
+  color: #fff;
+}
+.btn--primary:hover { background: oklch(var(--c-brand-d)); }
+.btn--outline {
+  background: transparent;
+  border: 1px solid oklch(var(--c-border));
+  color: oklch(var(--c-text));
+}
+.btn--outline:hover { background: oklch(var(--c-surface2)); }
+.btn:active { transform: scale(.96); }
+
+/* ── Copy button ── */
+.copy-btn {
+  position: absolute;
+  top: .5rem;
+  right: .5rem;
+  opacity: 0;
+  transition: opacity .2s;
+  background: oklch(var(--c-surface2));
+  border: 1px solid oklch(var(--c-border));
+  color: oklch(var(--c-muted));
+  width: 2rem; height: 2rem;
+  border-radius: .3rem;
+  font-size: .8rem;
+}
+.code-block { position: relative; }
+.code-block:hover .copy-btn { opacity: 1; }
+
+/* ── Layout primitives ── */
+.hero { text-align: center; padding-block: 4rem 2rem; }
+.hero h1 { font-size: clamp(2.5rem, 6vw, 3.5rem); }
+.hero p { font-size: 1.125rem; max-width: 36rem; margin-inline: auto; }
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 1rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .container { padding-inline: 1rem; }
+  .hero { padding-block: 2rem 1rem; }
+}

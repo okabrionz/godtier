@@ -1,0 +1,40 @@
+{{/* List / section template — used for /prompts/ and any section */}}
+{{ define "title" }}{{ .Title }} — {{ site.Title }}{{ end }}
+{{ define "main" }}
+<div class="hero" style="padding-block: 2.5rem 1rem;">
+  <div class="container">
+    <h1>{{ .Title }}</h1>
+    {{ with .Params.description }}<p class="muted">{{ . }}</p>{{ end }}
+  </div>
+</div>
+
+<div class="container">
+  {{ if .Paginator }}
+  <div class="gt-prompt-grid">
+    {{ range .Paginator.Pages }}
+    <article class="gt-prompt-card">
+      <div class="card-head">
+        <h3 class="card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+        <span class="badge badge--brand">{{ .Params.model | default "Multi" }}</span>
+      </div>
+      <div class="card-meta">
+        {{ range .Params.categories }}
+        <span class="badge">{{ . }}</span>
+        {{ end }}
+        {{ range .Params.tags }}
+        <span class="badge">{{ . }}</span>
+        {{ end }}
+        <span class="badge">{{ .Date.Format "Jan 2, 2006" }}</span>
+      </div>
+      <pre class="prompt-preview">{{ .Plain | truncate 220 "" }}</pre>
+      <a href="{{ .RelPermalink }}" class="read-more">Use this prompt →</a>
+    </article>
+    {{ end }}
+  </div>
+
+  {{ template "_internal/pagination.html" .Paginator }}
+  {{ else }}
+  <p>No prompts found.</p>
+  {{ end }}
+</div>
+{{ end }}

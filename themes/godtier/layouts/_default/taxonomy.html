@@ -1,0 +1,28 @@
+{{/* Taxonomy (category/tag) list page */}}
+{{ define "title" }}{{ .Title }} — {{ site.Title }}{{ end }}
+{{ define "main" }}
+<div class="hero" style="padding-block: 2.5rem 1rem;">
+  <div class="container">
+    <h1>{{ .Title }}</h1>
+    <p class="muted">{{ len .Data.Pages }} prompts in this category.</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="gt-prompt-grid">
+    {{ range .Data.Pages }}
+    <article class="gt-prompt-card">
+      <div class="card-head">
+        <h3 class="card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+        <span class="badge">{{ .Params.model | default "Multi" }}</span>
+      </div>
+      <div class="card-meta">
+        <span class="badge">{{ .Date.Format "Jan 2, 2006" }}</span>
+      </div>
+      <pre class="prompt-preview">{{ .Plain | truncate 200 "" }}</pre>
+      <a href="{{ .RelPermalink }}" class="read-more">Use this prompt →</a>
+    </article>
+    {{ end }}
+  </div>
+</div>
+{{ end }}

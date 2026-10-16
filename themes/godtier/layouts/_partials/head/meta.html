@@ -1,0 +1,8 @@
+{{/* meta tags */}}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ block "title" . }}{{ .Title }} — {{ site.Title }}{{ end }}</title>
+<meta name="description" content="{{ .Description | default site.Params.description }}">
+<meta name="author" content="{{ site.Params.author }}">
+{{/* <link rel="canonical" href="{{ .Permalink }}"> */}}
+{{ partialCached "head/favicons" . }}

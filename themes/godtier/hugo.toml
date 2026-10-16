@@ -1,0 +1,38 @@
+# GodTier theme — dark, red-accent, minimal. for godtier.store
+name = "GodTier"
+license = "MIT"
+description = "Dark minimal theme for god-tier AI prompt publishing. Red accent."
+tags = ["dark", "minimal", "blog", "prompts", "responsive"]
+features = ["responsive", "syntax-highlighting", "rss", "seo"]
+min_version = "0.120.0"
+
+[author]
+  name = "okabrionz / superkilat.com"
+  homepage = "https://superkilat.com"
+
+[menu]
+  [[menu.main]]
+    name = "Home"
+    url = "/"
+    weight = 10
+  [[menu.main]]
+    name = "All Prompts"
+    url = "/prompts/"
+    weight = 20
+  [[menu.main]]
+    name = "Categories"
+    url = "/categories/"
+    weight = 30
+  [[menu.main]]
+    name = "About"
+    url = "/about/"
+    weight = 40
+
+[params]
+  themeColor = "#0a0a0d"
+
+[outputFormats]
+  [outputFormats.JSON]
+    mediaType = "application/json"
+    baseName = "index"
+    isPlainText = true

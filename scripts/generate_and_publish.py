@@ -255,15 +255,15 @@ def generate_markdown(candidate: dict, date: datetime) -> str:
     if not prompt_text.startswith("##"):
         prompt_text = f"## {title}\n\n{prompt_text}"
 
-    tags_yaml = yaml.dump(candidate["tags"]).strip()
-    categories_yaml = yaml.dump([candidate["category"]]).strip()
+    tags_inline = "[" + ", ".join(candidate["tags"]) + "]"
+    categories_inline = "[" + candidate["category"] + "]"
 
     md = f"""---
 title: "{title.replace('"', "'")}"
 date: {datetime_str}
 draft: false
-categories: [{candidate['category']}]
-tags: {tags_yaml.replace("[", "").replace("]", "").replace("\n", ", ").strip()}
+categories: {categories_inline}
+tags: {tags_inline}
 model: "Multi-Model"
 best_score: {candidate['scores']['overall']:.1f}
 usage_notes: ""

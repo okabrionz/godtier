@@ -41,6 +41,11 @@ sitemap:
 permalinks:
   prompts: "/prompts/:year/:slug/"
 
+# Taxonomies
+taxonomies:
+  category: "categories"
+  tag: "tags"
+
 # Params
 params:
   author: "God Tier"

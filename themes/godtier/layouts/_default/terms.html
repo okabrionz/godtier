@@ -11,7 +11,7 @@
   <div class="gt-prompt-grid">
     {{ range $name, $taxonomy := .Data.Terms }}
     <a href="{{ $.Site.BaseURL }}{{ $.Data.Plural }}/{{ $name | urlize }}/" class="gt-prompt-card">
-      <h3 class="card-title">{{ $name }}</h3>
+      <h3 class="card-title">{{ $name | title }}</h3>
       <span class="badge">{{ len $taxonomy.Pages }} prompts</span>
     </a>
     {{ end }}
